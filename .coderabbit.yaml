@@ -3,6 +3,7 @@ language: ko-KR
 reviews:
   profile: chill
   poem: false
+  fail_commit_status: true
   auto_review:
     enabled: true
     base_branches:
