@@ -28,7 +28,7 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return handleExceptionInternal(ex, body, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
 
-    // Spring 기본 오류(404, 405, 검증 실패 등)는 본문이 부모 메서드 안에서 만들어지므로, 만들어진 뒤에 code 를 채운다.
+    // Spring 기본 오류(404, 405, 검증 실패 등)는 부모가 만든 본문에 code 를 채운다.
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(
             Exception ex, Object body, HttpHeaders headers, HttpStatusCode statusCode, WebRequest request) {
