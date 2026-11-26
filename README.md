@@ -45,7 +45,7 @@ docker compose --profile mock up --build
 | `develop` | 개발 서버(`dev-api.moadream.kr`) |
 | `production` | 운영 서버(`api.moadream.kr`). Swagger가 꺼진다 |
 
-`develop`, `production`의 DB 접속 정보는 환경변수(`SPRING_DATASOURCE_URL` 등)로 넣는다. 공개 repo이므로 비밀값은 repo에 두지 않는다.
+`develop`, `production`의 DB 접속 정보는 환경변수(`SPRING_DATASOURCE_URL` 등)로 넣는다. 비밀값은 repo에 두지 않는다.
 
 ## 규칙
 
@@ -79,7 +79,7 @@ public class FundingClosedException extends ErrorResponseException {
 
 ### mock
 
-경로와 Swagger 설명은 `*Api` 인터페이스에 두고, 실제 컨트롤러와 mock 컨트롤러가 같은 인터페이스를 구현한다. 시그니처가 어긋나면 컴파일이 깨진다.
+경로와 Swagger 설명은 `*Api` 인터페이스에 두고, 실제 컨트롤러와 mock 컨트롤러가 같은 인터페이스를 구현한다.
 
 ```java
 @RequestMapping("/v1/fundings")
@@ -106,7 +106,7 @@ class FundingMockController implements FundingApi {
 }
 ```
 
-API를 만들 때 mock 컨트롤러도 함께 만들어 프론트가 먼저 붙을 수 있게 한다.
+API를 만들 때 mock 컨트롤러도 함께 만든다.
 
 ### DB
 
@@ -125,7 +125,15 @@ API를 만들 때 mock 컨트롤러도 함께 만들어 프론트가 먼저 붙�
 | Checkstyle | 들여쓰기 4칸, 미사용·와일드카드 import |
 | ArchUnit | DTO의 엔티티 의존, 컨트롤러의 Repository·엔티티 의존, 컨트롤러의 `@Transactional`, 패키지 순환, `@Query`·`@NativeQuery`, 문자열을 받는 jOOQ API, `LocalDateTime` |
 
-### PR
+### 브랜치·커밋·PR
+
+| 항목 | 규칙 | 예 |
+|---|---|---|
+| 브랜치 | `feature/{뤼이도 키}` | `feature/14-38` |
+| 커밋 | `{타입}({뤼이도 키}): 요약`. 타입은 `feat`, `fix`, `refactor`, `test`, `docs`, `chore` | `feat(14-38): 엔티티 공통 규칙 추가` |
+| PR 제목 | `[{뤼이도 키}] 요약` | `[14-38] 엔티티 공통 규칙` |
 
 - 피쳐 브랜치에서 `develop`으로 PR을 올린다. 사람 두 명이 approve하면 FF 머지한다.
+- 커밋마다 이슈 키를 넣는다. CI가 `develop`으로 오는 PR의 브랜치 이름과 모든 커밋 메시지를 검사한다.
+- 배포는 `develop` → `production` PR, 그다음 `production` → `main` PR로 한다. 배포할 때 `production`에 태그 `v{YYYYMMDD}-{짧은 해시}`를 단다.
 - CodeRabbit이 1차 리뷰를 한다. 자동으로 돌지 않으면 PR에 `@coderabbitai review` 댓글을 단다.
