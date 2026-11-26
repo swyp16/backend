@@ -133,9 +133,10 @@ API를 만들 때 mock 컨트롤러도 함께 만든다.
 | 커밋 | `{타입}({이슈 키}): 요약`. 타입은 `feat`, `fix`, `refactor`, `test`, `docs`, `chore` | `feat(14-38): 엔티티 공통 규칙 추가` |
 | PR 제목 | `[{이슈 키}] 요약` | `[14-38] 엔티티 공통 규칙` |
 
-- 피쳐 브랜치에서 `develop`으로 PR을 올린다. 사람 두 명이 approve하면 FF 머지한다.
+- 피쳐 브랜치에서 `develop`으로 PR을 올린다. 사람 두 명이 approve하면 Rebase and merge로 합친다.
 - PR 본문은 템플릿(`.github/pull_request_template.md`)을 채운다.
 - 커밋마다 이슈 키를 넣는다. CI가 `develop`으로 오는 PR의 브랜치 이름과 모든 커밋 메시지를 검사한다.
 - 배포는 `develop` → `production` PR, 그다음 `production` → `main` PR로 한다. 배포할 때 `production`에 태그 `v{YYYYMMDD}-{짧은 해시}`를 단다.
+- 승격 PR은 머지 버튼 대신 `/ff` 댓글로 반영한다. 봇이 체크 통과와 FF 가능 여부를 확인하고 base 브랜치를 PR head 커밋으로 옮긴다(`.github/workflows/fast-forward.yml`, 변수 `FF_APP_CLIENT_ID`, 시크릿 `FF_APP_PRIVATE_KEY`).
 - 디스코드 알림은 PR 생성, `develop`·`production`·`main` 반영, `v*` 태그 생성 때 간다(`.github/workflows/discord.yml`, 시크릿 `DISCORD_WEBHOOK_URL`).
 - CodeRabbit이 1차 리뷰를 한다. 자동으로 돌지 않으면 PR에 `@coderabbitai review` 댓글을 단다.

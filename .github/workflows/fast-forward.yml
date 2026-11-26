@@ -1,0 +1,111 @@
+name: 승격 FF
+
+# develop → production, production → main 승격 PR 에 "/ff" 댓글을 달면 base 브랜치를 PR head 로 FF 한다.
+on:
+  issue_comment:
+    types: [created]
+
+permissions: {}
+
+jobs:
+  fast-forward:
+    if: >-
+      github.event.issue.pull_request && startsWith(github.event.comment.body, '/ff')
+      && contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-latest
+    concurrency:
+      group: fast-forward-${{ github.event.issue.number }}
+      cancel-in-progress: false
+    steps:
+      - name: GitHub App 토큰
+        id: app
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.FF_APP_CLIENT_ID }}
+          private-key: ${{ secrets.FF_APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-workflows: write
+          permission-pull-requests: write
+          permission-checks: read
+          permission-statuses: read
+
+      - name: 확인 후 FF
+        # 댓글 본문과 작성자는 환경변수로만 넘긴다.
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.issue.number }}
+          ACTOR: ${{ github.event.comment.user.login }}
+          COMMENT: ${{ github.event.comment.body }}
+          REQUIRED_APPROVALS: 0
+        run: |
+          set -euo pipefail
+          fail() {
+            gh pr comment "$PR" -R "$REPO" --body "FF 하지 않았다: $1"
+            echo "::error::$1"
+            exit 1
+          }
+
+          if [ "$(printf '%s\n' "$COMMENT" | head -n 1 | tr -d '[:space:]')" != "/ff" ]; then
+            echo "/ff 명령이 아니다"; exit 0
+          fi
+
+          perm=$(gh api "repos/$REPO/collaborators/$ACTOR/permission" --jq .permission 2>/dev/null || echo none)
+          case "$perm" in
+            admin|maintain|write) ;;
+            *) echo "::error::$ACTOR 에게 쓰기 권한이 없다"; exit 1 ;;
+          esac
+
+          pr=$(gh api "repos/$REPO/pulls/$PR")
+          state=$(printf '%s' "$pr" | jq -r .state)
+          base=$(printf '%s' "$pr" | jq -r .base.ref)
+          head=$(printf '%s' "$pr" | jq -r .head.ref)
+          head_sha=$(printf '%s' "$pr" | jq -r .head.sha)
+          head_repo=$(printf '%s' "$pr" | jq -r .head.repo.full_name)
+          [ "$state" = open ] || fail "열린 PR 이 아니다"
+          [ "$head_repo" = "$REPO" ] || fail "같은 저장소의 브랜치만 FF 한다"
+          case "$head>$base" in
+            "develop>production" | "production>main") ;;
+            *) fail "승격 PR(develop → production, production → main)만 FF 한다: $head → $base" ;;
+          esac
+
+          reviews=$(gh api "repos/$REPO/pulls/$PR/reviews?per_page=100" \
+            --jq '.[] | select(.state != "COMMENTED") | [.user.login, .state] | @tsv' \
+            | awk -F '\t' '{ last[$1] = $2 } END { for (u in last) print last[u] }')
+          if printf '%s\n' "$reviews" | grep -qx CHANGES_REQUESTED; then
+            fail "변경 요청이 남아 있다"
+          fi
+          approvals=$(printf '%s\n' "$reviews" | grep -cx APPROVED || true)
+          [ "$approvals" -ge "$REQUIRED_APPROVALS" ] || fail "승인 ${approvals}명, ${REQUIRED_APPROVALS}명 필요"
+
+          runs=$(gh api "repos/$REPO/commits/$head_sha/check-runs?per_page=100")
+          not_passed=$(printf '%s' "$runs" | jq -r '.check_runs[]
+            | select(.status != "completed" or ((.conclusion | IN("success", "neutral", "skipped")) | not))
+            | "\(.name)(\(.conclusion // .status))"')
+          [ -z "$not_passed" ] || fail "통과하지 않은 체크: $(printf '%s' "$not_passed" | tr '\n' ' ')"
+          [ "$(printf '%s' "$runs" | jq '[.check_runs[] | select(.name == "check" and .conclusion == "success")] | length')" -ge 1 ] \
+            || fail "check(빌드·테스트)가 이 커밋에서 통과한 기록이 없다"
+          status=$(gh api "repos/$REPO/commits/$head_sha/status" --jq '"\(.total_count) \(.state)"')
+          [ "${status%% *}" = 0 ] || [ "${status#* }" = success ] || fail "커밋 상태가 ${status#* } 이다"
+
+          base_sha=$(gh api "repos/$REPO/git/ref/heads/$base" --jq .object.sha)
+          compare=$(gh api "repos/$REPO/compare/$base_sha...$head_sha" --jq '"\(.status) \(.behind_by)"')
+          case "$compare" in
+            "ahead 0") ;;
+            identical*) fail "$base 가 이미 같은 커밋이다" ;;
+            *) fail "FF 할 수 없다($compare). $base 가 $head 의 조상이 아니다" ;;
+          esac
+
+          gh api -X PATCH "repos/$REPO/git/refs/heads/$base" -f sha="$head_sha" -F force=false > /dev/null \
+            || fail "$base 갱신이 거부됐다"
+
+          short=$(printf '%s' "$head_sha" | cut -c1-7)
+          for _ in 1 2 3 4 5 6; do
+            sleep 5
+            # merged 로 표시됐거나 그사이 head 가 바뀌었으면 닫지 않는다.
+            if [ "$(gh api "repos/$REPO/pulls/$PR" --jq '"\(.merged) \(.head.sha)"')" != "false $head_sha" ]; then
+              gh pr comment "$PR" -R "$REPO" --body "FF 했다: $base → $short"
+              exit 0
+            fi
+          done
+          gh pr close "$PR" -R "$REPO" --comment "FF 했다: $base → $short. PR 이 merged 로 표시되지 않아 닫는다."
