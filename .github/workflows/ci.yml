@@ -42,7 +42,8 @@ jobs:
           if ! printf '%s' "$HEAD_REF" | grep -Eq '^feature/[0-9]+-[0-9]+$'; then
             echo "브랜치 이름이 규칙과 다르다: $HEAD_REF (feature/{이슈 키}, 예: feature/14-38)"; exit 1
           fi
-          bad=$(git log --format='%h %s' "$BASE_SHA..$HEAD_SHA" | grep -Ev '^[0-9a-f]+ (feat|fix|refactor|test|docs|chore)\([0-9]+-[0-9]+\): .+' || true)
+          log=$(git log --format='%h %s' "$BASE_SHA..$HEAD_SHA")
+          bad=$(printf '%s\n' "$log" | grep -Ev '^[0-9a-f]+ (feat|fix|refactor|test|docs|chore)\([0-9]+-[0-9]+\): .+' || [ $? -eq 1 ])
           if [ -n "$bad" ]; then
             echo "커밋 메시지가 규칙과 다르다 ({타입}({이슈 키}): 요약, 예: feat(14-38): 엔티티 공통 규칙 추가):"
             echo "$bad"
