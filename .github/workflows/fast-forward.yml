@@ -69,7 +69,7 @@ jobs:
             *) fail "승격 PR(develop → production, production → main)만 FF 한다: $head → $base" ;;
           esac
 
-          reviews=$(gh api "repos/$REPO/pulls/$PR/reviews?per_page=100" \
+          reviews=$(gh api --paginate "repos/$REPO/pulls/$PR/reviews?per_page=100" \
             --jq '.[] | select(.state != "COMMENTED") | [.user.login, .state] | @tsv' \
             | awk -F '\t' '{ last[$1] = $2 } END { for (u in last) print last[u] }')
           if printf '%s\n' "$reviews" | grep -qx CHANGES_REQUESTED; then
@@ -78,12 +78,12 @@ jobs:
           approvals=$(printf '%s\n' "$reviews" | grep -cx APPROVED || true)
           [ "$approvals" -ge "$REQUIRED_APPROVALS" ] || fail "승인 ${approvals}명, ${REQUIRED_APPROVALS}명 필요"
 
-          runs=$(gh api "repos/$REPO/commits/$head_sha/check-runs?per_page=100")
-          not_passed=$(printf '%s' "$runs" | jq -r '.check_runs[]
+          runs=$(gh api --paginate --slurp "repos/$REPO/commits/$head_sha/check-runs?per_page=100" | jq '[.[].check_runs[]]')
+          not_passed=$(printf '%s' "$runs" | jq -r '.[]
             | select(.status != "completed" or ((.conclusion | IN("success", "neutral", "skipped")) | not))
             | "\(.name)(\(.conclusion // .status))"')
           [ -z "$not_passed" ] || fail "통과하지 않은 체크: $(printf '%s' "$not_passed" | tr '\n' ' ')"
-          [ "$(printf '%s' "$runs" | jq '[.check_runs[] | select(.name == "check" and .conclusion == "success")] | length')" -ge 1 ] \
+          [ "$(printf '%s' "$runs" | jq '[.[] | select(.name == "check" and .conclusion == "success")] | length')" -ge 1 ] \
             || fail "check(빌드·테스트)가 이 커밋에서 통과한 기록이 없다"
           status=$(gh api "repos/$REPO/commits/$head_sha/status" --jq '"\(.total_count) \(.state)"')
           [ "${status%% *}" = 0 ] || [ "${status#* }" = success ] || fail "커밋 상태가 ${status#* } 이다"
@@ -99,13 +99,4 @@ jobs:
           gh api -X PATCH "repos/$REPO/git/refs/heads/$base" -f sha="$head_sha" -F force=false > /dev/null \
             || fail "$base 갱신이 거부됐다"
 
-          short=$(printf '%s' "$head_sha" | cut -c1-7)
-          for _ in 1 2 3 4 5 6; do
-            sleep 5
-            # merged 로 표시됐거나 그사이 head 가 바뀌었으면 닫지 않는다.
-            if [ "$(gh api "repos/$REPO/pulls/$PR" --jq '"\(.merged) \(.head.sha)"')" != "false $head_sha" ]; then
-              gh pr comment "$PR" -R "$REPO" --body "FF 했다: $base → $short"
-              exit 0
-            fi
-          done
-          gh pr close "$PR" -R "$REPO" --comment "FF 했다: $base → $short. PR 이 merged 로 표시되지 않아 닫는다."
+          gh pr comment "$PR" -R "$REPO" --body "FF 했다: $base → $(printf '%s' "$head_sha" | cut -c1-7)"
