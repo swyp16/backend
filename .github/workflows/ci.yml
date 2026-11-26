@@ -13,8 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      # 공개 PR 로 바뀐 gradle-wrapper.jar 가 실행되지 않게 먼저 검증한다.
-      # v6 부터 setup-gradle 캐시에 별도 약관이 붙어, 약관 변경 전 v5 의 검증만 쓰고 캐시는 setup-java 로 한다.
+      # gradle-wrapper.jar 를 먼저 검증하고, Gradle 캐시는 setup-java 로 한다.
       - uses: gradle/actions/wrapper-validation@v5
       - uses: actions/setup-java@v6
         with:
@@ -23,3 +22,30 @@ jobs:
           cache: gradle
       # Checkstyle, ArchUnit, 테스트(Testcontainers), 실행 jar 빌드
       - run: ./gradlew check bootJar
+
+  # develop 으로 오는 PR 의 브랜치 이름과 커밋 메시지를 검사한다. 커밋마다 뤼이도 키를 넣는다.
+  naming:
+    if: github.event_name == 'pull_request' && github.base_ref == 'develop'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: 브랜치·커밋 이름 규칙
+        # 브랜치 이름은 환경변수로만 넘긴다.
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -eu
+          if ! printf '%s' "$HEAD_REF" | grep -Eq '^feature/[0-9]+-[0-9]+$'; then
+            echo "브랜치 이름이 규칙과 다르다: $HEAD_REF (feature/{뤼이도 키}, 예: feature/14-38)"; exit 1
+          fi
+          bad=$(git log --format='%h %s' "$BASE_SHA..$HEAD_SHA" | grep -Ev '^[0-9a-f]+ (feat|fix|refactor|test|docs|chore)\([0-9]+-[0-9]+\): .+' || true)
+          if [ -n "$bad" ]; then
+            echo "커밋 메시지가 규칙과 다르다 ({타입}({뤼이도 키}): 요약, 예: feat(14-38): 엔티티 공통 규칙 추가):"
+            echo "$bad"
+            exit 1
+          fi
+          echo "브랜치·커밋 이름 규칙 통과"
