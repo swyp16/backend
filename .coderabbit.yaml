@@ -6,9 +6,13 @@ reviews:
   fail_commit_status: true
   auto_review:
     enabled: true
+    # develop, production, 그리고 기본 브랜치 main 으로 오는 PR 을 리뷰한다. 승격 PR(고정 제목)은 리뷰하지 않는다.
     base_branches:
       - develop
       - production
+    ignore_title_keywords:
+      - Develop to production
+      - Production to main
   path_instructions:
     - path: "src/main/java/**/*.java"
       instructions: |
