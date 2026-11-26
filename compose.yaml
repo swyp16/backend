@@ -1,0 +1,35 @@
+# 로컬 개발용. 운영·개발 서버 배포용 설정은 여기에 두지 않는다.
+services:
+  postgres:
+    # 버전은 운영 RDS, 테스트(TestcontainersConfiguration)와 같게 둔다.
+    image: postgres:18
+    environment:
+      POSTGRES_DB: moadream
+      POSTGRES_USER: moadream
+      POSTGRES_PASSWORD: moadream
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "moadream", "-d", "moadream"]
+      interval: 2s
+      retries: 30
+
+  # 프론트 연동용 mock 서버: docker compose --profile mock up --build
+  mock:
+    profiles: [mock]
+    build: .
+    environment:
+      SPRING_PROFILES_ACTIVE: mock
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/moadream
+      SPRING_DATASOURCE_USERNAME: moadream
+      SPRING_DATASOURCE_PASSWORD: moadream
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:

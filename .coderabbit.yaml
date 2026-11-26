@@ -1,0 +1,23 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: ko-KR
+reviews:
+  profile: chill
+  poem: false
+  auto_review:
+    enabled: true
+    base_branches:
+      - develop
+      - production
+  path_instructions:
+    - path: "src/main/java/**/*.java"
+      instructions: |
+        Checkstyle 과 ArchUnit 이 CI 에서 이미 막는 규칙(들여쓰기, import, LocalDateTime, @Query·@NativeQuery,
+        jOOQ 의 @PlainSQL API, DTO 의 엔티티 의존, 컨트롤러의 Repository·엔티티 의존과 @Transactional, 패키지 순환)은
+        지적하지 않는다. 단, JdbcTemplate 같은 다른 경로로 SQL 문자열을 실행하거나 문자열을 이어 붙여 SQL 을 만들면 지적한다.
+        아래도 본다.
+
+        1. 책임: 한 클래스나 메서드가 너무 많은 일을 하지 않는지. 나눠야 한다면 어떻게 나눌지 제안한다.
+        2. 추상화: 지금 필요하지 않은 추상화(구현이 하나뿐인 인터페이스, 한 곳에서만 쓰는 팩토리나 전략 등)가 없는지,
+           더 단순한 방법이 있는지. 단, `*Api` 인터페이스 하나에 실제 컨트롤러와 mock 컨트롤러가 붙는 구조는 팀 규칙이므로 지적하지 않는다.
+        3. 이름: 메서드, 변수, 클래스 이름이 같은 패키지와 기존 코드의 이름 짓는 방식과 맞는지.
+        4. 컨트롤러: 조건 분기, 계산, 상태 변경 같은 비즈니스 로직이 컨트롤러에 들어가지 않았는지.

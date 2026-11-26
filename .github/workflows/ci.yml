@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [develop, production]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      # 공개 PR 로 바뀐 gradle-wrapper.jar 가 실행되지 않게 먼저 검증한다.
+      # v6 부터 setup-gradle 캐시에 별도 약관이 붙어, 약관 변경 전 v5 의 검증만 쓰고 캐시는 setup-java 로 한다.
+      - uses: gradle/actions/wrapper-validation@v5
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 25
+          cache: gradle
+      # Checkstyle, ArchUnit, 테스트(Testcontainers), 실행 jar 빌드
+      - run: ./gradlew check bootJar
