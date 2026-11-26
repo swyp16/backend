@@ -129,11 +129,12 @@ API를 만들 때 mock 컨트롤러도 함께 만든다.
 
 | 항목 | 규칙 | 예 |
 |---|---|---|
-| 브랜치 | `feature/{뤼이도 키}` | `feature/14-38` |
-| 커밋 | `{타입}({뤼이도 키}): 요약`. 타입은 `feat`, `fix`, `refactor`, `test`, `docs`, `chore` | `feat(14-38): 엔티티 공통 규칙 추가` |
-| PR 제목 | `[{뤼이도 키}] 요약` | `[14-38] 엔티티 공통 규칙` |
+| 브랜치 | `feature/{이슈 키}` | `feature/14-38` |
+| 커밋 | `{타입}({이슈 키}): 요약`. 타입은 `feat`, `fix`, `refactor`, `test`, `docs`, `chore` | `feat(14-38): 엔티티 공통 규칙 추가` |
+| PR 제목 | `[{이슈 키}] 요약` | `[14-38] 엔티티 공통 규칙` |
 
 - 피쳐 브랜치에서 `develop`으로 PR을 올린다. 사람 두 명이 approve하면 FF 머지한다.
+- PR 본문은 템플릿(`.github/pull_request_template.md`)을 채운다.
 - 커밋마다 이슈 키를 넣는다. CI가 `develop`으로 오는 PR의 브랜치 이름과 모든 커밋 메시지를 검사한다.
 - 배포는 `develop` → `production` PR, 그다음 `production` → `main` PR로 한다. 배포할 때 `production`에 태그 `v{YYYYMMDD}-{짧은 해시}`를 단다.
 - CodeRabbit이 1차 리뷰를 한다. 자동으로 돌지 않으면 PR에 `@coderabbitai review` 댓글을 단다.
