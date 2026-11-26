@@ -1,0 +1,42 @@
+name: Discord 알림
+
+# PR 생성, develop·production·main 반영(머지), v* 태그 생성만 보낸다.
+on:
+  pull_request:
+    types: [opened]
+  push:
+    branches: [develop, production, main]
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    if: github.event_name != 'push' || !github.event.deleted
+    runs-on: ubuntu-latest
+    steps:
+      - name: 메시지 보내기
+        # 사용자 입력(PR 제목, 커밋 메시지)은 jq 로만 다룬다.
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          set -eu
+          if [ -z "${DISCORD_WEBHOOK_URL:-}" ]; then
+            echo "::notice::DISCORD_WEBHOOK_URL 시크릿이 없어 알림을 보내지 않는다"; exit 0
+          fi
+          ev="$GITHUB_EVENT_PATH"
+          if [ "$GITHUB_EVENT_NAME" = pull_request ]; then
+            content=$(jq -r '.pull_request as $p
+              | "[PR 생성] #\($p.number) \($p.title)\n\($p.head.ref) → \($p.base.ref), \($p.user.login)\n\($p.html_url)"' "$ev")
+          elif [ "$GITHUB_REF_TYPE" = tag ]; then
+            content=$(jq -r '(.ref | sub("^refs/tags/"; "")) as $t
+              | "[태그 생성] \($t) (\(.after[0:7])), \(.pusher.name)\n\(.repository.html_url)/tree/\($t)"' "$ev")
+          else
+            content=$(jq -r '(if (.commits | length) > 0 then .commits else [.head_commit] end) as $c
+              | "[\(.ref | sub("^refs/heads/"; "")) 머지] \(.pusher.name)\n"
+              + ([$c[] | "- \(.id[0:7]) \(.message | split("\n")[0])"] | join("\n"))
+              + "\n\(.compare)"' "$ev")
+          fi
+          jq -n --arg content "$content" '{content: ($content | .[0:1990]), allowed_mentions: {parse: []}}' \
+            | curl -fsS -H 'Content-Type: application/json' -d @- "$DISCORD_WEBHOOK_URL"
