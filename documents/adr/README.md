@@ -4,7 +4,7 @@
 
 - 한 문서에 결정 하나를 쓴다.
 - 새 ADR은 [TEMPLATE.md](TEMPLATE.md)를 복사해 `{번호 4자리}-{영문 제목}.md`로 만들고, 아래 목록에 추가한다.
-- 확정한 ADR은 고치지 않는다. 결정을 바꾸면 새 ADR을 쓰고, 기존 문서의 상태만 `대체됨({새 번호})`으로 바꾼다.
+- 확정한 ADR은 상태 줄 말고는 고치지 않는다. 결정을 바꾸면 새 ADR을 쓰고, 기존 문서의 상태를 `대체됨({새 번호})`으로 바꾼다.
 
 | 번호 | 제목 | 상태 | 이슈 |
 |---|---|---|---|
@@ -17,12 +17,12 @@
 | [0007](0007-coderabbit-pr-review.md) | PR 1차 리뷰는 CodeRabbit | 확정 | 14-37 |
 | [0008](0008-mock-controller-profile.md) | mock은 같은 인터페이스를 구현하는 컨트롤러를 프로필로 바꾼다 | 확정 | 14-37 |
 | [0009](0009-api-response-format.md) | 성공은 DTO 그대로, 오류는 ProblemDetail + code | 확정 | 14-37 |
-| [0010](0010-nanoid-12-entity-id.md) | 엔티티 ID는 NanoID 12자 | 확정 (적용은 14-38) | 14-38 |
-| [0011](0011-time-handling.md) | 시각은 TIMESTAMPTZ·Instant·UTC(마이크로초), 현재 시각은 Clock 빈으로 | 확정 (적용은 14-38) | 14-38 |
-| [0012](0012-money-as-long.md) | 금액은 원 단위 정수(long) | 확정 (적용은 14-38) | 14-38 |
-| [0013](0013-enum-as-string.md) | enum은 문자열로 저장 | 확정 (적용은 14-38) | 14-38 |
-| [0014](0014-common-columns.md) | 모든 테이블에 created_at·updated_at, BaseEntity가 채운다 | 확정 (적용은 14-38) | 14-38 |
-| [0015](0015-deletion-policy.md) | 삭제는 기본 물리 삭제, 참여·입금 이력은 지우지 않는다 | 확정 (회원 탈퇴 처리는 담당자가 정한다, 적용은 14-38) | 14-38 |
+| [0010](0010-nanoid-12-entity-id.md) | 엔티티 ID는 NanoID 12자 | 확정 | 14-38 |
+| [0011](0011-time-handling.md) | 시각은 TIMESTAMPTZ·Instant·UTC(마이크로초), 현재 시각은 Clock 빈으로 | 확정 | 14-38 |
+| [0012](0012-money-as-long.md) | 금액은 원 단위 정수(long) | 확정 | 14-38 |
+| [0013](0013-enum-as-string.md) | enum은 문자열로 저장 | 확정 | 14-38 |
+| [0014](0014-common-columns.md) | 모든 테이블에 created_at·updated_at, BaseEntity가 채운다 | 확정 | 14-38 |
+| [0015](0015-deletion-policy.md) | 삭제는 기본 물리 삭제, 참여·입금 이력은 지우지 않는다 | 확정 (회원 탈퇴 처리는 담당자가 정한다) | 14-38 |
 | [0016](0016-branch-commit-pr-naming.md) | 브랜치·커밋·PR 이름에 이슈 키를 넣고, 커밋은 CI가 검사한다 | 확정 | 14-45 |
 | [0017](0017-ci-gradle-cache-and-wrapper-validation.md) | CI의 Gradle 캐시는 setup-java로, wrapper 검증은 gradle/actions v5로 | 확정 | 14-37 |
 | [0018](0018-coderabbit-enforcement.md) | CodeRabbit은 리뷰 완료와 지적 해결까지 강제한다 | 확정 (ruleset 적용은 나중에) | 14-45 |

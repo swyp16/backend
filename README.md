@@ -49,6 +49,6 @@ docker compose --profile mock up --build
 
 ## 문서
 
-- [코딩 규칙](documents/coding-rules.md): 패키지와 API, 응답 형식, mock, DB, CI가 막는 것
+- [코딩 규칙](documents/coding-rules.md): 패키지와 API, 응답 형식, mock, 엔티티와 테이블, DB, 테이블 쓰기 담당, CI가 막는 것
 - [브랜치·커밋·PR](documents/git-workflow.md): 이름 규칙, 머지, 승격, 핫픽스, 알림
 - [ADR](documents/adr/README.md): 트레이드오프가 있었던 결정
