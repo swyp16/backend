@@ -117,7 +117,7 @@ class ArchitectureTest {
                     call -> call.getTargetOwner().isEquivalentTo(Clock.class) && call.getName().startsWith("system")))
             .orShould().callMethod(System.class, "currentTimeMillis")
             .orShould().callConstructor(Date.class)
-            .because("현재 시각은 Clock 빈을 주입받아 Instant.now(clock), LocalDate.now(clock) 처럼 얻는다");
+            .because("현재 시각은 Clock 빈을 주입받아 Instant.now(clock), LocalDate.now(clock.withZone(CommonConfig.KST)) 처럼 얻는다");
 
     @ArchTest
     static final ArchRule 엔티티는_BaseEntity를_상속한다 = classes()
