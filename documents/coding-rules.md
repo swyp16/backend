@@ -37,7 +37,7 @@ public class FundingClosedException extends ErrorResponseException {
 public interface FundingApi {
 
     @GetMapping("/{fundingId}")
-    FundingResponse get(@PathVariable long fundingId);
+    FundingResponse get(@PathVariable String fundingId);
 }
 
 @RestController
@@ -51,7 +51,7 @@ class FundingController implements FundingApi {
 class FundingMockController implements FundingApi {
 
     @Override
-    public FundingResponse get(long fundingId) {
+    public FundingResponse get(String fundingId) {
         return new FundingResponse(fundingId, "에어팟 프로", 300000, 120000);
     }
 }
@@ -63,7 +63,7 @@ API를 만들 때 mock 컨트롤러도 함께 만든다.
 
 - **스키마 변경:** Flyway로 한다(`src/main/resources/db/migration/V{번호}__{설명}.sql`, 하위 폴더도 된다). 앱은 스키마를 만들지 않고 검증만 한다(`ddl-auto: validate`).
 - **쓰기와 조회:** 쓰기는 JPA로 한다. 메서드 이름 쿼리로 안 되는 조회는 jOOQ로 쓰고, `@Query`는 쓰지 않는다.
-- **jOOQ 코드:** 빌드 때 마이그레이션 SQL에서 자동으로 생성된다(`kr.moadream.jooq`). DB 접속은 필요 없다. jOOQ가 해석하지 못하는 구문(PL/pgSQL 함수 등)은 `-- [jooq ignore start]`와 `-- [jooq ignore stop]` 사이에 둔다.
+- **jOOQ 코드:** 빌드 때 마이그레이션 SQL에서 자동으로 생성된다(`kr.moadream.jooq`). DB 접속은 필요 없다. jOOQ가 해석하지 못하는 구문(PL/pgSQL 함수 등)은 `-- [jooq ignore start]`와 `-- [jooq ignore stop]` 사이에 둔다. 테이블·컬럼을 만들거나 바꾸는 구문은 넣지 않는다. 넣으면 생성 코드에서 빠진다.
 - **SQL 문자열 금지:** 문자열을 받는 jOOQ API(`where("...")` 등)는 쓰지 않는다. 생성된 테이블과 컬럼으로 쿼리를 만든다.
 - **flush:** JPA로 쓴 직후 같은 트랜잭션에서 jOOQ로 읽으려면 먼저 flush한다.
 - **시간 타입:** 시간은 `Instant`로 다룬다(`LocalDateTime` 금지). `timestamptz` 컬럼은 jOOQ에서 `OffsetDateTime`으로 생성된다.
@@ -74,4 +74,4 @@ API를 만들 때 mock 컨트롤러도 함께 만든다.
 | 도구 | 규칙 |
 |---|---|
 | Checkstyle | 들여쓰기 4칸, 미사용·와일드카드 import |
-| ArchUnit | DTO의 엔티티 의존, 컨트롤러의 Repository·엔티티 의존, 컨트롤러의 `@Transactional`, 패키지 순환, `@Query`·`@NativeQuery`, 문자열을 받는 jOOQ API, `LocalDateTime` |
+| ArchUnit | DTO의 엔티티 의존, 컨트롤러의 Repository·엔티티 의존, 컨트롤러의 `@Transactional`, 도메인 사이 패키지 순환, `@Query`·`@NativeQuery`, 문자열을 받는 jOOQ API, `LocalDateTime` |

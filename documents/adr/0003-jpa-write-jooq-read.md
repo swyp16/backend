@@ -41,7 +41,7 @@
   - 팀이 데이터 접근 기술 두 가지를 익혀야 한다.
   - 같은 트랜잭션에서 JPA로 쓴 뒤 jOOQ로 읽으면 flush 전 변경이 보이지 않는다. 쓰기 직후 같은 트랜잭션에서 jOOQ로 조회할 때는 먼저 flush해야 한다.
   - 메서드 이름 쿼리로 안 되는 조회는 JPQL 한 줄짜리라도 jOOQ로 써야 한다.
-  - SQL 해석 방식이라 PostgreSQL 전용 문법 일부는 해석하지 못할 수 있다. 그런 구문은 `[jooq ignore start]`/`[jooq ignore stop]` 주석으로 건너뛴다. 생성된 타입이 실제 DB와 다르게 해석되면 Testcontainers 테스트에서 드러난다.
+  - SQL 해석 방식이라 PostgreSQL 전용 문법 일부는 해석하지 못할 수 있다. 그런 구문(PL/pgSQL 함수 등)은 `[jooq ignore start]`/`[jooq ignore stop]` 주석으로 건너뛴다. 테이블·컬럼을 만들거나 바꾸는 구문은 ignore에 넣지 않는다. 넣으면 생성 코드에서 그 테이블·컬럼이 빠지고, 테스트가 그 컬럼을 쓰지 않으면 드러나지 않는다.
 
 ## 후속 확인
 
