@@ -20,7 +20,7 @@
 1. 요청·응답 DTO는 엔티티에 의존하지 않는다.
 2. 컨트롤러는 Repository와 엔티티에 직접 의존하지 않는다.
 3. 컨트롤러에 `@Transactional`을 붙이지 않는다(클래스, 메서드).
-4. 패키지 사이에 순환이 없다.
+4. 도메인 패키지(`kr.moadream.<도메인>`) 사이에 순환이 없다. 도메인 안의 하위 패키지끼리는 검사하지 않는다.
 5. `@Query`, `@NativeQuery`를 쓰지 않는다([0003](0003-jpa-write-jooq-read.md)).
 6. 문자열을 받는 jOOQ API(`@PlainSQL`)를 부르지 않는다. 생성 코드(`kr.moadream.jooq`)는 제외한다.
 7. `LocalDateTime`을 쓰지 않는다. 시간은 `Instant`로 다룬다. 생성 코드는 제외한다.

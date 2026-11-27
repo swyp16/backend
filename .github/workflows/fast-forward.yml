@@ -93,7 +93,7 @@ jobs:
           approvals=$(printf '%s\n' "$reviews" | grep -cx APPROVED || true)
           [ "$approvals" -ge "$required" ] || fail "승인 ${approvals}명, ${required}명 필요"
 
-          # ponytail: 대화는 앞 100개만 본다. PR 하나에 100개를 넘기면 페이지를 넘긴다.
+          # 리뷰 대화는 앞 100개만 본다.
           unresolved=$(gh api graphql -f owner="${REPO%/*}" -f name="${REPO#*/}" -F number="$PR" -f query='
             query($owner: String!, $name: String!, $number: Int!) {
               repository(owner: $owner, name: $name) {
