@@ -69,7 +69,7 @@ API를 만들 때 mock 컨트롤러도 함께 만든다.
   updated_at TIMESTAMPTZ NOT NULL,
   ```
 - **시각:** DB는 `TIMESTAMPTZ`, Java는 `Instant`(`LocalDateTime` 금지), JSON은 ISO-8601 UTC(`"2026-12-20T03:00:00Z"`)다. 정밀도는 마이크로초다(PostgreSQL 기준, `Clock` 빈도 마이크로초 단위).
-- **현재 시각:** `Instant.now()` 등을 직접 부르지 않고 `Clock` 빈을 주입받아 `Instant.now(clock)`으로 얻는다. `LocalDate.now(clock)`처럼 `now`에는 항상 `clock`을 넘긴다. 테스트에서는 `@TestBean`으로 `Clock` 빈을 바꿔 시각을 고정한다.
+- **현재 시각:** `Instant.now()` 등을 직접 부르지 않고 `Clock` 빈을 주입받아 `Instant.now(clock)`으로 얻는다. `now`에는 항상 `clock`을 넘기고, 날짜는 `LocalDate.now(clock.withZone(CommonConfig.KST))`처럼 KST로 얻는다. 테스트에서는 `@TestBean`으로 `Clock` 빈을 바꿔 시각을 고정한다.
 - **날짜 계산:** 마감일처럼 날짜를 다룰 때는 `CommonConfig.KST`(Asia/Seoul)로 계산한다. 마감일이 12/20이면 마감 시각은 12/21 00:00 KST이고, 그 시각부터 마감이다.
 - **금액:** 원 단위 정수다. Java `long`, DB `BIGINT`, JSON 숫자. 금액 필드 이름은 `...Amount` 또는 `...Price`로 끝낸다.
 - **enum:** `@Enumerated(EnumType.STRING)`으로 저장하고 컬럼은 `VARCHAR`다. 순서값이나 PostgreSQL enum 타입은 쓰지 않는다.
